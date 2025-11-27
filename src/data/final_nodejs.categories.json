@@ -1,0 +1,12 @@
+[{
+  "_id": {
+    "$oid": "672354b4040dba1782a7a446"
+  },
+  "category_name": "T-shirt"
+},
+{
+  "_id": {
+    "$oid": "672354c5040dba1782a7a448"
+  },
+  "category_name": "Hoodies"
+}]

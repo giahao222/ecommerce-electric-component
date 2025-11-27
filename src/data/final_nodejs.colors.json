@@ -1,0 +1,24 @@
+[{
+  "_id": {
+    "$oid": "672354ea040dba1782a7a44b"
+  },
+  "color_name": "Gray"
+},
+{
+  "_id": {
+    "$oid": "672354f6040dba1782a7a44d"
+  },
+  "color_name": "Black"
+},
+{
+  "_id": {
+    "$oid": "67235503040dba1782a7a44f"
+  },
+  "color_name": "Blue"
+},
+{
+  "_id": {
+    "$oid": "67235510040dba1782a7a451"
+  },
+  "color_name": "Red"
+}]

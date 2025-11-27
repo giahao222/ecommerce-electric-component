@@ -1,0 +1,12 @@
+[{
+  "_id": {
+    "$oid": "672353d5040dba1782a7a43b"
+  },
+  "tag_name": "Clothes"
+},
+{
+  "_id": {
+    "$oid": "672353e9040dba1782a7a43d"
+  },
+  "tag_name": "Cotton"
+}]
