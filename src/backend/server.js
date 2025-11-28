@@ -67,6 +67,13 @@ app.get("/category/:slug", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "category.html"));
 });
 
+// Trang chi tiết product
+app.get("/product/:slug", (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "../fontend/UniClub/User/Template/product_detail.html")
+  );
+});
+
 // 🔹 API ROUTES
 app.use(authRouter);
 app.use(productRouter);

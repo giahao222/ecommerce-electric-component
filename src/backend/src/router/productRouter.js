@@ -68,5 +68,21 @@ router.get('/api/products/category/:slug', async (req, res) => {
   }
 });
 
+// GET /api/products/:slug  -> lấy chi tiết sản phẩm theo slug
+router.get("/api/products/:slug", async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const product = await Product.findOne({ slug }).populate("category");
+
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    res.json(product);
+  } catch (err) {
+    console.error("Lỗi lấy chi tiết sản phẩm:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
 
 module.exports = router;

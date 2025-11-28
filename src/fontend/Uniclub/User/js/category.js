@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const priceOldText = priceOld ? formatPrice(priceOld) : null;
           const hasSale = priceOld && priceOld > priceNew;
 
-          const detailUrl = "#"; // sau này bạn thay link chi tiết vào đây
+          const detailUrl = `/product/${encodeURIComponent(p.slug || p._id)}`; // sau này bạn thay link chi tiết vào đây
 
           return `
             <li class="product type-product">
