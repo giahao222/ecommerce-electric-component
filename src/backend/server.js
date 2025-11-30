@@ -52,7 +52,7 @@ app.use(passport.session());
 
 // 🔹 STATIC FRONTEND
 // Giả sử cấu trúc: src/frontend/UniClub/User/...
-const frontendRoot = path.join(__dirname, "../fontend/Uniclub/User");
+const frontendRoot = path.join(__dirname, "../frontend/Uniclub/User");
 
 // serve js, css, img... trong thư mục này
 app.use(express.static(frontendRoot));
