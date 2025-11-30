@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
+    <h2 class="text-center text-2xl font-semibold mb-2">Create Account</h2>
+    <p class="text-center text-gray-500 mb-6">Join VoltEdge today</p>
+
+   <form id="registerForm" class="mt-6">
+  <label class="text-sm">Full Name</label>
+    <input
+      type="text"
+      name="full_name"
+      class="w-full border rounded-xl px-4 py-3 mt-1 mb-4"
+      placeholder="Your Name"
+      required
+    />
+
+    <label class="text-sm">Email</label>
+    <input
+      type="email"
+      name="email"
+      class="w-full border rounded-xl px-4 py-3 mt-1 mb-4"
+      placeholder="yourmail@gmail.com"
+      required
+    />
+
+    <label class="text-sm">Password</label>
+    <input
+      type="password"
+      name="password"
+      class="w-full border rounded-xl px-4 py-3 mt-1 mb-4"
+      placeholder="••••••••"
+      required
+    />
+
+    <button
+      type="submit"
+      class="w-full bg-black text-white py-3 rounded-xl hover:opacity-90 transition"
+    >
+      Create Account
+    </button>
+  </form>
+
+  <p id="message" class="text-center text-sm mt-4"></p>
+    <div class="mt-6 space-y-3">
+      <button class="w-full border py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/>
+        <span>Sign up with Google</span>
+      </button>
+
+      <a href="./facebook" class="w-full border py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+        <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" class="w-5 h-5" alt="Facebook" />
+        <span>Login with Facebook</span>
+      </a>
+    </div>
+
+    <p class="text-center text-sm text-gray-600 mt-5">
+      Already have an account?
+      <a href="./login" class="text-blue-500 hover:underline">Login</a>
+    </p>
+  </div>
+
+</body>
+<script>
+  const form = document.getElementById("registerForm");
+  const messageBox = document.getElementById("message");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      full_name: form.full_name.value,
+      email: form.email.value,
+      password: form.password.value,
+    };
+
+    try {
+      const res = await fetch("./create-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        messageBox.innerHTML = `<span class='text-red-500'>${data.msg || data.errors?.[0]?.msg}</span>`;
+        return;
+      }
+
+      messageBox.innerHTML = `<span class='text-green-600'>${data.message}</span>`;
+      form.reset();
+    } catch (error) {
+      messageBox.innerHTML = `<span class='text-red-500'>Lỗi kết nối server!</span>`;
+    }
+  });
+</script>
+</html>

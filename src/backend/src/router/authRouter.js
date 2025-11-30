@@ -8,6 +8,9 @@ router.post("/create-account", authController.createAccount);
 // link xác thực
 router.get("/verify", authController.verify_email);
 
+// link xác thực
+router.get("/resend-verification", authController.resendVerification);
+
 // đăng nhập bằng tài khoản
 router.post("/login-normal", authController.loginByEmailandPassword);
 
