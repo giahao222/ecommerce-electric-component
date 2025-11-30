@@ -6,85 +6,103 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const passportFaceBook = require("../config/facebookConfig");
 const PasswordResetToken = require("../models/passwordresettoken");
+const mongoose = require("mongoose");
 const crypto = require("crypto");
-
+const  EmailVerificationToken = require("../models/emailVerificationToken")
 const { check, validationResult } = require("express-validator");
 const mailer = require("../utils/mailUtils");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const createAccount = [
-  check("email").isEmail().withMessage("Please enter a valid email address"),
+  check("email")
+    .isEmail()
+    .matches(/@gmail\.com$/)
+    .withMessage("Chỉ chấp nhận email Gmail (@gmail.com)")
+    .normalizeEmail(),
+
   check("password")
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  check("full_name").notEmpty().withMessage("Username is required"),
+    .withMessage("Mật khẩu phải có ít nhất 6 ký tự"),
+
+  check("full_name")
+    .notEmpty()
+    .trim()
+    .escape()
+    .withMessage("Họ tên không được để trống"),
 
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    console.log("!");
+
     const { email, password, full_name } = req.body;
+
     try {
-      const user = await User.findOne({ email });
-      if (user) {
-        return res.status(400).json({ msg: "Email này đã được đăng kí" });
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ msg: "Email này đã được đăng ký" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 12);
       const role = await Role.findOne({ name: "User" });
+
       if (!role) {
-        return res.status(500).json({ msg: "Role not found" });
+        return res.status(500).json({ msg: "Không tìm thấy vai trò User" });
       }
 
-      const newUser = new User({
-        full_name: full_name,
-        email: email,
+      const newUser = await User.create({
+        full_name,
+        email,
         password: hashedPassword,
         id_roles: role._id,
-        active: true,
+        active: false,
       });
 
-      // Generate a verification token
       const verificationToken = crypto.randomBytes(32).toString("hex");
-      const verificationLink = `http://localhost:8080/verify?token=${verificationToken}&email=${newUser.email}`;
-
-      const expiresAt = new Date(Date.now() + 60000); // 5 minute from now
 
       await PasswordResetToken.create({
         email: newUser.email,
         token: verificationToken,
-        expiresAt: expiresAt,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
 
-      await newUser.save();
+      const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:8080"}/verify?token=${verificationToken}&email=${email}`;
 
-      // Send verification email
-      mailer.sendMail(
+      await mailer.sendMail(
         newUser.email,
-        "Welcome! Confirm Your Email to Start Exploring",
-        `<p>Hi ${newUser.full_name},</p>
-        <p>Welcome to our platform! We’re excited to have you on board.</p>
-        <p>To get started, please verify your email by clicking the link below:</p>
-        <p><a href="${verificationLink}" style="color: #4CAF50;">Verify My Account</a></p>
-        <p>If you didn’t create this account, please ignore this email.</p>
-        <p>Best regards,<br>Loi Team</p>`
+       "Xác thực tài khoản của bạn - Loi Team",
+          `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #4CAF50;">Chào mừng ${newUser.full_name}!</h2>
+            <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>Loi Team</strong>.</p>
+            <p>Vui lòng nhấn vào nút bên dưới để xác thực email (link hết hạn sau 15 phút):</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" 
+                 style="background:#4CAF50; color:white; padding:12px 30px; text-decoration:none; border-radius:5px; font-weight:bold;">
+                 XÁC THỰC TÀI KHOẢN
+              </a>
+            </p>
+            <p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>
+            <hr>
+            <small>Trân trọng,<br><strong>Loi Team</strong></small>
+          </div>
+          `
       );
 
       res.status(201).json({
-        message:
-          "Tài khoản đã được đăng kí thành công ! Hãy kiểm tra xác thực trong hộp thư của bạn",
+        message: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
       });
+
     } catch (error) {
+      console.error("Lỗi đăng ký:", error);
       return res.status(500).json({
-        message: "An error occurred on the server",
-        error: error.message,
+        message: "Đã có lỗi xảy ra.",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   },
 ];
-
 const verify_email = async (req, res) => {
   const { token, email } = req.query;
   try {
@@ -108,6 +126,7 @@ const verify_email = async (req, res) => {
 
     // Xác thực email
     user.verify_email = true;
+    user.active = true;
     await user.save();
 
     // Xóa token sau khi sử dụng
@@ -122,6 +141,85 @@ const verify_email = async (req, res) => {
     });
   }
 };
+
+const resendVerification = [
+  // Validation
+  check("email")
+    .isEmail()
+    .matches(/@gmail\.com$/)
+    .withMessage("Chỉ chấp nhận email Gmail (@gmail.com)")
+    .normalizeEmail(),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    try {
+    
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(200).json({
+          message: "Nếu email tồn tại, link xác thực đã được gửi lại!",
+        });
+      }
+      if (user.active) {
+        return res.status(400).json({
+          message: "Tài khoản đã được kích hoạt rồi!",
+        });
+      }
+
+      // Xóa token cũ (nếu có)
+      await PasswordResetToken.deleteMany({ email });
+
+      // Tạo token mới + thời hạn mới (15 phút)
+      const newToken = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+      await PasswordResetToken.create({
+        email,
+        token: newToken,
+        expiresAt,
+      });
+
+      // Gửi lại email
+      const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:8080"}/verify?token=${newToken}&email=${encodeURIComponent(email)}`;
+
+      await mailer.sendMail(
+        email,
+        "Xác thực tài khoản - Link mới (hết hạn sau 15 phút)",
+        `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #4CAF50;">Chào ${user.full_name || "bạn"}!</h2>
+          <p>Chúng tôi nhận được yêu cầu gửi lại link xác thực tài khoản.</p>
+          <p>Link mới có hiệu lực trong <strong>15 phút</strong>:</p>
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${verificationLink}" 
+               style="background:#4CAF50; color:white; padding:14px 32px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:16px;">
+               XÁC THỰC NGAY
+            </a>
+          </p>
+          <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+          <small>Trân trọng,<br><strong>Loi Team</strong></small>
+        </div>
+        `
+      );
+
+      return res.status(200).json({
+        message: "Link xác thực đã được gửi lại! Vui lòng kiểm tra email (kể cả mục Spam).",
+      });
+
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      return res.status(500).json({
+        message: "Có lỗi xảy ra, vui lòng thử lại sau.",
+      });
+    }
+  },
+];
 
 const loginByEmailandPassword = async (req, res) => {
   const { email, password } = req.body;
@@ -141,6 +239,7 @@ const loginByEmailandPassword = async (req, res) => {
   });
   res.status(200).json({ token: token, full_name: userFind.full_name });
 };
+
 const loginWithGoogle = passport.authenticate("google", {
   scope: ["profile", "email"],
 });
@@ -188,9 +287,7 @@ const logout = async (req, res) => {
 };
 
 // đăng nhập bằng facebook
-const loginWithFacebook = passportFaceBook.authenticate("facebook", {
-  scope: "email",
-});
+const loginWithFacebook = passportFaceBook.authenticate("facebook");
 
 const callBackUrlFaceBook = [
   passportFaceBook.authenticate("facebook", {
@@ -213,7 +310,7 @@ const callBackUrlFaceBook = [
     res.cookie("token", token, { httpOnly: true }); // Gửi token dưới dạng cookie
 
     res.redirect(
-      `http://127.0.0.1:5500/fontend/Uniclub/User/home.html?token=${token}&full_name=${encodeURIComponent(
+      `/home.html?token=${token}&full_name=${encodeURIComponent(
         user.full_name
       )}`
     );
@@ -304,6 +401,7 @@ const reset_password = async (req, res) => {
 module.exports = {
   createAccount,
   verify_email,
+  resendVerification,
   loginByEmailandPassword,
   loginWithGoogle,
   callBackURL,

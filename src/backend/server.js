@@ -1,11 +1,12 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({
+});
 const express = require("express");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
-const path = require("path");                      // 👈 thêm dòng này
 
 const authRouter = require("./src/router/authRouter");
 const productRouter = require("./src/router/productRouter");
@@ -55,13 +56,26 @@ app.use(passport.session());
 const frontendRoot = path.join(__dirname, "../frontend/Uniclub/User");
 
 // serve js, css, img... trong thư mục này
+app.use(express.static(path.join(frontendRoot, "Template")));
+app.use("/css", express.static(path.join(frontendRoot, "css")));
+app.use("/js", express.static(path.join(frontendRoot, "js")));
+app.use("/images", express.static(path.join(frontendRoot, "images")));
+
 app.use(express.static(frontendRoot));
 
 // 🔹 ROUTE TRANG HOME
 app.get("/", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "home.html"));
 });
-
+app.get("/home", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "home.html"));
+});
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "login.html"));
+});
+app.get("/create-account", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "create-account.html"));
+});
 // 🔹 ROUTE TRANG CATEGORY (dùng 1 file category.html cho mọi slug)
 app.get("/category/:slug", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "category.html"));
