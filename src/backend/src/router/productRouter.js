@@ -85,4 +85,33 @@ router.get("/api/products/:slug", async (req, res) => {
   }
 });
 
+// Lấy chi tiết sản phẩm theo slug
+router.get("/api/products/slug/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // nếu schema có field "slug"
+    const product = await Product.findOne({ slug }).populate("category"); 
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Có thể trả thẳng product, JS đã có fallback
+    res.json(product);
+
+    // Nếu muốn gửi kèm tên & slug category rõ ràng:
+    /*
+    res.json({
+      ...product.toObject(),
+      categoryName: product.category?.name || "",
+      categorySlug: product.category?.slug || "laptops",
+    });
+    */
+  } catch (err) {
+    console.error("Error get product by slug:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
