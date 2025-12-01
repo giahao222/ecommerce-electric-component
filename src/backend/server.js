@@ -27,15 +27,15 @@ const port = 8080;
 app.set("trust proxy", 1);
 app.use(cors());
 
-// 🔒 rate limit
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Bạn đã thực hiện quá nhiều yêu cầu. Vui lòng thử lại sau.",
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// // 🔒 rate limit
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   message: "Bạn đã thực hiện quá nhiều yêu cầu. Vui lòng thử lại sau.",
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+// app.use(limiter);
 
 // 🔧 middlewares chung
 app.use(express.json());
@@ -73,6 +73,11 @@ app.get("/product/:slug", (req, res) => {
     path.join(__dirname, "../fontend/UniClub/User/Template/product_detail.html")
   );
 });
+
+app.use(
+  '/prepared-clam.10web.cloud',
+  express.static(path.join(__dirname, '..', '..', 'vendors', 'prepared-clam.10web.cloud'))
+);
 
 // 🔹 API ROUTES
 app.use(authRouter);
