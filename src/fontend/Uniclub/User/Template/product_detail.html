@@ -814,6 +814,39 @@
 		}
 	    </style>
 	    
+	    <style>
+		/* Thu nhỏ vùng related products, căn giữa và tạo lề 2 bên */
+		.related.products .related-slider-container {
+		  max-width: 1500px;      /* giới hạn bề rộng */
+		  margin: 0 auto 40px;    /* căn giữa + cách dưới 40px */
+		  padding: 0 40px;        /* lề trái/phải 40px */
+		}
+	    
+		/* Cho mỗi slide có chút khoảng trắng */
+		.related.products .swiper-slide.product {
+		  padding: 10px;
+		}
+	    
+		/* Ảnh trong related nhỏ lại một chút để đỡ “đè” lên nhau */
+		.related.products .twbb-image-container img {
+		  max-height: 260px;
+		  width: 100%;
+		  object-fit: contain;
+		}
+	    
+		/* Căn lại mũi tên cho đẹp (không dính sát mép màn hình) */
+		.related.products .swiper-button-prev,
+		.related.products .swiper-button-next {
+		  transform: translateY(-50%);
+		}
+		.related.products .swiper-button-prev {
+		  left: 10px;
+		}
+		.related.products .swiper-button-next {
+		  right: 10px;
+		}
+	    </style>
+	    
 
 </head>
 
@@ -1352,7 +1385,7 @@
 					data-widget_type="twbb_woocommerce-products.classic">
 					<div class="elementor-widget-container">
 
-						<section class="related products">
+						<!-- <section class="related products">
 
 							<h2>Related products</h2>
 							<ul class="products elementor-grid elementor-grid columns-4"
@@ -1663,7 +1696,55 @@
 
 							</ul>
 
-						</section>
+						</section> -->
+
+						<section class="related products">
+							<h2>Related products</h2>
+						    
+							<div class="related-slider-container"><!-- 👈 THÊM DIV NÀY -->
+							  <div class="woocommerce columns-10">
+							    <ul
+								class="products elementor-grid tenweb-widget-slider swiper swiper-horizontal"
+								data-settings='{
+								  "slider_view":"yes",
+								  "slides_count":10,
+								  "pagination":"bullets",
+								  "show_arrows":"yes",
+								  "speed":500,
+								  "autoplay":"yes",
+								  "autoplay_speed":5000,
+								  "loop":"no",
+								  "pause_on_interaction":"yes",
+								  "breakpoints":{
+								    "slides_per_view":"4",
+								    "slides_per_view_tablet":"2",
+								    "slides_per_view_mobile":"1",
+								    "slides_to_scroll":"",
+								    "slides_to_scroll_tablet":"",
+								    "slides_to_scroll_mobile":"",
+								    "space_between":{"unit":"px","size":14,"sizes":[]},
+								    "space_between_tablet":{"unit":"px","size":14,"sizes":[]},
+								    "space_between_mobile":{"unit":"px","size":14,"sizes":[]}
+								  }
+								}'
+							    >
+								<div class="swiper-wrapper" id="related-products-list"></div>
+						    
+								<div class="swiper-pagination-container">
+								  <div class="swiper-pagination"></div>
+								  <div class="swiper-pagination-arrows-container">
+								    <div class="swiper-pagination-arrows-wrapper twbb-slider-arrows-icon arrow2">
+									<div class="swiper-button swiper-button-prev"></div>
+									<div class="swiper-button swiper-button-next"></div>
+								    </div>
+								  </div>
+								</div>
+							    </ul>
+							  </div>
+							</div><!-- /related-slider-container -->
+						    </section>
+						    
+						    
 					</div>
 				</div>
 			</div>

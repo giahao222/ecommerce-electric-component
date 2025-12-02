@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailUrl = `/product/${p.slug || p._id}`;
 
     return `
-      <li class="product type-product">
+      <li class="swiper-slide product type-product">
         <a href="${detailUrl}"
            class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
           <div class="twbb-image-wrap">
@@ -92,10 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+
   async function loadRelatedProducts(product) {
     if (!relatedRoot) return;
 
     try {
+      // Tính slug cho category một cách an toàn
       let categorySlug = "laptops";
 
       if (product.categorySlug) {
@@ -110,27 +112,42 @@ document.addEventListener("DOMContentLoaded", () => {
         categorySlug = product.category.toLowerCase();
       }
 
+      console.log("👉 categorySlug dùng để gọi API:", categorySlug);
+
       const res = await fetch(
         `/api/products/category/${encodeURIComponent(
           categorySlug
-        )}?limit=4&exclude=${product._id}`
+        )}?limit=10&exclude=${product._id}`
       );
       if (!res.ok) throw new Error("HTTP " + res.status);
 
       let list = await res.json();
-      list = list.filter((x) => x._id !== product._id).slice(0, 4);
+      list = list.filter((x) => x._id !== product._id).slice(0, 10);
 
       if (!list.length) {
-        relatedRoot.innerHTML = "<li>Không có sản phẩm liên quan.</li>";
+        relatedRoot.innerHTML =
+          "<li class='swiper-slide'>Không có sản phẩm liên quan.</li>";
         return;
       }
 
+      // Đổ các slide vào swiper-wrapper
       relatedRoot.innerHTML = list.map(renderRelatedItem).join("");
+
+      // Cập nhật swiper (dùng chung cơ chế với slider ở Home)
+      try {
+        if (window.swiper && typeof window.swiper.update === "function") {
+          window.swiper.update();
+        }
+      } catch (e) {
+        console.warn("Không update được swiper cho related products:", e);
+      }
     } catch (err) {
       console.error("Lỗi load related products:", err);
-      relatedRoot.innerHTML = "<li>Lỗi tải sản phẩm liên quan.</li>";
+      relatedRoot.innerHTML =
+        "<li class='swiper-slide'>Lỗi tải sản phẩm liên quan.</li>";
     }
   }
+
 
   // ⭐ RENDER RATING TRUNG BÌNH
   function renderAverageRating(avg) {
