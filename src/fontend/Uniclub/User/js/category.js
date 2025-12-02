@@ -50,8 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
           p.image ||
           "https://via.placeholder.com/600x600?text=No+Image";
 
-        const priceNew = p.price_new ?? p.price;
-        const priceOld = p.price_old ?? null;
+          const priceNew = p.price_new || 0;
+          const priceOld = p.price_old || null;
+          
 
         const priceNewText = formatPrice(priceNew);
         const priceOldText = priceOld ? formatPrice(priceOld) : null;
@@ -128,60 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =====================================================
-   * FILTER GIÁ — GIỮ NGUYÊN
-   * ===================================================== */
-  function applyPriceFilter() {
-    if (!allProducts.length) return;
-
-    const minInput = document.querySelector(".twwf_min_price_input");
-    const maxInput = document.querySelector(".twwf_max_price_input");
-
-    let min = parseFloat(minInput?.value || 0);
-    let max = parseFloat(maxInput?.value || Infinity);
-
-    if (isNaN(min)) min = 0;
-    if (isNaN(max)) max = Infinity;
-
-    const filtered = allProducts.filter((p) => {
-      const price = Number(p.price_new || 0);
-      return price >= min && price <= max;
-    });
-
-    currentPage = 1;
-    renderProducts(filtered);
-    renderPagination();
-  }
-
-  function initFilters() {
-    const btn = document.getElementById("price-filter-apply");
-    if (btn) {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        applyPriceFilter();
-      });
-    }
-
-    const minInput = document.querySelector(".twwf_min_price_input");
-    const maxInput = document.querySelector(".twwf_max_price_input");
-
-    let lastMin = minInput?.value;
-    let lastMax = maxInput?.value;
-
-    setInterval(() => {
-      if (!minInput || !maxInput) return;
-
-      const curMin = minInput.value;
-      const curMax = maxInput.value;
-
-      if (curMin !== lastMin || curMax !== lastMax) {
-        lastMin = curMin;
-        lastMax = curMax;
-        applyPriceFilter();
-      }
-    }, 300);
-  }
-
+ 
   /* =====================================================
    * FETCH API CATEGORIES
    * ===================================================== */
@@ -216,5 +164,4 @@ document.addEventListener("DOMContentLoaded", () => {
    * INIT
    * ===================================================== */
   loadCategoryProducts();
-  initFilters();
 });

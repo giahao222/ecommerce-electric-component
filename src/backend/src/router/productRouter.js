@@ -114,4 +114,55 @@ router.get("/api/products/slug/:slug", async (req, res) => {
   }
 });
 
+// rate product
+router.post("/products/:id/rating", async (req, res) => {
+  try {
+    const { rating } = req.body;
+    const productId = req.params.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating phải từ 1 đến 5" });
+    }
+
+    // Lấy product hiện tại
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    // Tính toán rating mới
+    const currentAvg = product.rating_average || 0;
+    const count = product.rating_count || 0;
+
+    const newCount = count + 1;
+    const newAverage = ((currentAvg * count) + rating) / newCount;
+
+    // Lưu
+    product.rating_average = newAverage;
+    product.rating_count = newCount;
+
+    await product.save();
+
+    res.json({
+      message: "Đánh giá thành công",
+      rating_average: product.rating_average,
+      rating_count: product.rating_count,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+});
+
+router.get("/products/:id/rating", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .select("rating_average rating_count");
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi server" });
+  }
+});
+
+
 module.exports = router;
