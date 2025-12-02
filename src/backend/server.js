@@ -49,6 +49,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 // 🔹 STATIC FRONTEND
 // Giả sử cấu trúc: src/frontend/UniClub/User/...
