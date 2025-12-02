@@ -1,3 +1,8 @@
+js: 
+category.js
+product_detail.js
+index-2.js
+
 **Hướng dẫn thực hiện Run Project chi tiết:**
 
 ---
