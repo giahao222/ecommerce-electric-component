@@ -817,7 +817,7 @@
 	    <style>
 		/* Thu nhỏ vùng related products, căn giữa và tạo lề 2 bên */
 		.related.products .related-slider-container {
-		  max-width: 1500px;      /* giới hạn bề rộng */
+		  max-width: 1400px;      /* giới hạn bề rộng */
 		  margin: 0 auto 40px;    /* căn giữa + cách dưới 40px */
 		  padding: 0 40px;        /* lề trái/phải 40px */
 		}
@@ -844,6 +844,28 @@
 		}
 		.related.products .swiper-button-next {
 		  right: 10px;
+		}
+	    </style>
+	    <style>
+		/* --- FIX PAGINATION CHO RELATED PRODUCTS --- */
+	    
+		/* Bỏ absolute ở container pagination, cho nó chảy theo flow bình thường */
+		.related.products .swiper-pagination-container {
+		  position: static !important;
+		  margin-top: 15px;
+		}
+	    
+		/* Bỏ absolute/bottom/transform của pagination chấm */
+		.related.products .swiper-pagination {
+		  position: static !important;
+		  transform: none !important;
+		  margin-top: 10px;
+		  text-align: center;
+		}
+	    
+		/* Cho section related cách dưới 1 khoảng, đỡ dính footer/section sau */
+		.related.products {
+		  margin-bottom: 40px;
 		}
 	    </style>
 	    
