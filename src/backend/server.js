@@ -54,7 +54,8 @@ app.use(passport.session());
 // 🔹 STATIC FRONTEND
 // Giả sử cấu trúc: src/frontend/UniClub/User/...
 const frontendRoot = path.join(__dirname, "../frontend/Uniclub/User");
-
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 // serve js, css, img... trong thư mục này
 app.use(express.static(path.join(frontendRoot, "Template")));
 app.use("/css", express.static(path.join(frontendRoot, "css")));
@@ -83,6 +84,9 @@ app.get("/reset-password", (req, res) => {
 app.get("/create-account", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "create-account.html"));
 });
+app.get("/cart", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "cart.html"));
+});
 
 app.get("/profile-single", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "profile.html"));
@@ -93,9 +97,12 @@ app.get("/category/:slug", (req, res) => {
 });
 
 
-
-app.use("/auth", authRouter);
-app.use('/payment', paymentRoutes);
+app.get("/payment", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "payment.html"));
+});
+app.get("/return", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "return.html"));
+});
 
 
 // 🔹 ROUTE TRANG CATEGORY (dùng 1 file category.html cho mọi slug)
@@ -115,7 +122,8 @@ app.use(
   '/prepared-clam.10web.cloud',
   express.static(path.join(__dirname, '..', '..', 'vendors', 'prepared-clam.10web.cloud'))
 );
-
+app.use("/auth", authRouter);
+app.use('/payment', paymentRoutes);
 // 🔹 API ROUTES
 app.use(authRouter);
 app.use(productRouter);

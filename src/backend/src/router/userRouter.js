@@ -5,7 +5,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const authController = require("../middleware/authMiddleware");
-
+const { authMiddleware } = require("../middleware/authMiddleware");
 // lấy danh sách thông tin user
 router.get(
   "/users",
@@ -40,6 +40,15 @@ router.put(
   authController.authMiddleware,
   authController.checkRoleUser,
   userController.changes_for_admin
+);
+
+router.get("/profile-user", authMiddleware, userController.get_user_profile);
+
+router.put(
+  "/profile",
+  authMiddleware,
+  upload.single("image"),
+  userController.update_user_profile
 );
 
 module.exports = router;

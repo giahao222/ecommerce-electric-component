@@ -3,6 +3,11 @@ const router = express.Router();
 const cardController = require("../controller/cartController");
 const authMiddleware = require("../middleware/authMiddleware");
 
+router.post(
+  "/add-cart",
+  authMiddleware.authMiddleware,
+  cardController.add_product_to_cart
+);
 // load giỏ hàng của 1 user
 router.get(
   "/cart-user",
@@ -11,11 +16,7 @@ router.get(
 );
 
 // thêm 1 sản phẩm vào card của user
-router.post(
-  "/add-cart",
-  authMiddleware.authMiddleware,
-  cardController.add_product_to_cart
-);
+
 router.put(
   "/up-cart",
   authMiddleware.authMiddleware,

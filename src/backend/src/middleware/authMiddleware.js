@@ -12,9 +12,9 @@ function check_cookie_token(req) {
 const authMiddleware = async (req, res, next) => {
   const cookietoken = check_cookie_token(req);
   const headertoken = req.header("Authorization")?.replace("Bearer ", "");
-
+  
   const token = cookietoken || headertoken;
-
+  console.log(token)
   if (!token) {
     return res.status(401).json({ message: "Không thể xác thực", code: "NO_TOKEN" });
   }
@@ -23,7 +23,9 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const user = await User.findOne({ _id: decoded.user_id || decoded.id });
+    console.log(user.full_name)
     if (!user) {
+      console.log("a")
       return res.redirect("/login");
     }
 
@@ -49,7 +51,7 @@ const authMiddleware = async (req, res, next) => {
         code: "TOKEN_INVALID",
       });
     }
-
+    
     // 🔥 Lỗi khác → vẫn redirect
     return res.redirect("/login");
   }

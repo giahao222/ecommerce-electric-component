@@ -14,49 +14,74 @@ const CardBasReponse = (card) => {
 const get_card_for_user = async (req, res) => {
   try {
     const user_id = req.user._id;
+
+    // Lấy giỏ hàng + populate đầy đủ (product_name + image)
     const card_for_user = await Card.findOne({ id_user: user_id }).populate({
       path: "products.ID_product",
-      select: "product_name",
+      select: "product_name thumbnail", 
     });
+
     if (!card_for_user) {
       return res.status(200).json({
         message: "Giỏ hàng đang trống",
         data: "",
       });
     }
+
     return res.status(200).json({
       message: "Lấy thông tin giỏ hàng thành công",
-      data: CardBasReponse(card_for_user),
+      data: {
+        _id: card_for_user._id,
+        products: card_for_user.products,  // ← đúng dữ liệu
+        total: card_for_user.total,
+      },
     });
+
   } catch (error) {
-    return res
-      .status(401)
-      .json({ message: "Lỗi không load được giỏ người của khách hàng" });
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi không load được giỏ người của khách hàng",
+    });
   }
 };
-
 const add_product_to_cart = async (req, res) => {
   try {
-    const user_id = req.user._id; // Lấy ID người dùng từ token
+    console.log("user id");
+    const user_id = req.user._id; 
+    console.log("user id", user_id); // Lấy ID người dùng từ token
     const dataProduct = req.body; // Dữ liệu sản phẩm gửi lên
     const productss = await Product.findById(dataProduct.ID_product);
+    console.log("user id", user_id);
     // Tìm giỏ hàng của người dùng
     let card_for_user = await Card.findOne({ id_user: user_id });
 
     if (!card_for_user) {
+      console.log("card_for_user");
+
+      console.log(productss._id);
+      console.log(productss.product_name);
+      console.log(productss.brand);
+      console.log(productss.price_new);
+      console.log(dataProduct.quantity);
+      console.log("price_new:", productss.price_new, typeof productss.price_new);
+      console.log("quantity:", dataProduct.quantity, typeof dataProduct.quantity);
+      console.log("CALC:", productss.price_new * dataProduct.quantity);
+      const price = Number(productss.price_new);
+      const quantity = Number(dataProduct.quantity);
       // Nếu không có giỏ hàng, tạo mới
       const new_card = new Card({
         id_user: user_id,
         products: [
           {
             ID_product: productss._id, // Chuyển đổi ID thành ObjectId
-            size_name: dataProduct.size_name,
-            color_name: dataProduct.color_name,
-            price: dataProduct.price,
-            quantity: dataProduct.quantity,
+            size_name: productss.product_name,
+            color_name: productss.brand,
+           price: price,
+          quantity: quantity,
           },
         ],
-        total: dataProduct.price * dataProduct.quantity, // Cập nhật tổng giá trị
+        total: price * quantity,// Cập nhật tổng giá trị
+        
       });
 
       await new_card.save();
@@ -74,8 +99,8 @@ const add_product_to_cart = async (req, res) => {
         // Kiểm tra nếu sản phẩm đã tồn tại trong giỏ (cùng ID, màu sắc và kích thước)
         if (
           product.ID_product.equals(productss._id)&&
-          product.size_name === dataProduct.size_name &&
-          product.color_name === dataProduct.color_name
+          product.size_name === productss.product_name &&
+          product.color_name === productss.brand
         ) {
           // Cập nhật số lượng nếu sản phẩm đã tồn tại
           product.quantity += dataProduct.quantity; // Cộng thêm số lượng
@@ -86,12 +111,14 @@ const add_product_to_cart = async (req, res) => {
 
       // Nếu sản phẩm không tồn tại trong giỏ, thêm sản phẩm mới vào giỏ
       if (!productExists) {
+        const price = Number(productss.price_new);
+        const quantity = Number(dataProduct.quantity);
         card_for_user.products.push({
           ID_product: productss._id,
-          size_name: dataProduct.size_name,
-          color_name: dataProduct.color_name,
-          price: dataProduct.price,
-          quantity: dataProduct.quantity,
+          size_name: productss.product_name,
+          color_name: productss.brand,
+          price: price,
+          quantity: quantity,
         });
       }
 
@@ -169,23 +196,18 @@ const update_cart_quantity = async (req, res) => {
 const delete_product_in_cart = async (req, res) => {
   try {
     const user_id = req.user._id;
-    const product_id = req.body;
-    
-    // Tìm giỏ hàng của người dùng
+    const { product_id } = req.body;  // nhận đúng JSON
+
     const find_card = await Card.findOne({ id_user: user_id });
-    console.log(find_card);
+
     if (!find_card) {
       return res.status(404).json({ message: "Không tìm thấy giỏ hàng!" });
     }
 
-    // Tìm sản phẩm để xóa
-    const productIndex = 0;
-    for (let i = 0; i < find_card.products.length; i++) {
-      if (find_card.products[i].ID_product == product_id) {
-        productIndex = i;
-        break;
-      }
-    }
+    // Tìm index sản phẩm đúng
+    const productIndex = find_card.products.findIndex(
+      (p) => p.ID_product.toString() === product_id
+    );
 
     if (productIndex === -1) {
       return res
@@ -193,9 +215,9 @@ const delete_product_in_cart = async (req, res) => {
         .json({ message: "Sản phẩm không có trong giỏ hàng!" });
     }
 
-    const quantityToDelete = find_card.products[productIndex].quantity;
+    const deletedProduct = find_card.products[productIndex];
     const price_product_delete =
-      find_card.products[productIndex].price * quantityToDelete;
+      deletedProduct.price * deletedProduct.quantity;
 
     find_card.products.splice(productIndex, 1);
 

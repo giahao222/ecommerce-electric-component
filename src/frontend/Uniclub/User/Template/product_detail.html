@@ -1171,13 +1171,40 @@
 					<div class="elementor-element elementor-element-p85yaqu9 elementor-view-default elementor-widget elementor-widget-icon"
 						data-id="p85yaqu9" data-element_type="widget" data-widget_type="icon.default">
 						<div class="elementor-icon-wrapper">
-							<a class="elementor-icon" href="/prepared-clam.10web.cloud/my-account//">
-								<svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
-									viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-									<path
-										d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
-									</path>
-								</svg> </a>
+							<a class="elementor-icon" id="loginLink" href="/login" style="display: none;">
+                                                <svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
+                                                      viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                                      <path d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
+                                                      </path>
+                                                </svg>
+                                          </a>
+            
+                                    <!-- Hiển thị khi ĐÃ đăng nhập -->
+                                    <div id="userSection" style="display: none; align-items: center; gap: 10px;">
+                                          <a href="/profile-single">
+                                                      <svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
+                                                viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" 
+                                                style="width: 20px; height: 20px; fill: black;">
+                                                <path d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
+                                                </path>
+                                          </svg>
+                                          </a>
+                                          
+                                          <span id="user_name" style="color: black; font-weight: 500;"></span>
+                                          <button onclick="logout()" 
+                                                style="padding: 6px 16px; 
+                                                      background: #e74c3c; 
+                                                      color: white; 
+                                                      border: none; 
+                                                      border-radius: 4px; 
+                                                      cursor: pointer;
+                                                      font-size: 14px;
+                                                      transition: background 0.3s;"
+                                                onmouseover="this.style.background='#c0392b'"
+                                                onmouseout="this.style.background='#e74c3c'">
+                                                Đăng xuất
+                                          </button>
+                                    </div>
 						</div>
 					</div>
 					<div class="elementor-element elementor-element-g9oea2ql toggle-icon--custom remove-item-position--top twbb_menu-cart--empty-indicator-hide twbb_menu-cart--items-indicator-bubble twbb_menu-cart--cart-type-side-cart twbb_menu-cart--show-remove-button-yes elementor-widget elementor-widget-twbb_woocommerce-menu-cart"
@@ -2500,61 +2527,163 @@
 		id="twbb-custom-options-frontend-scripts-js"></script>
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
-			const addBtn = document.getElementById('pd-add-to-cart');
-			const qtyInput = document.getElementById('pd-quantity');
+    const addBtn = document.getElementById('pd-add-to-cart');
+    const qtyInput = document.getElementById('pd-quantity');
 
-			if (!addBtn) return;
+    if (!addBtn) return;
 
-			addBtn.addEventListener('click', async function () {
-				const token = localStorage.getItem('tokenCustomer');
-				if (!token) {
-					// chưa login thì cho bay về trang login
-					window.location.href = '/login.html';
-					return;
-				}
+    // Hàm thực hiện thêm vào giỏ hàng (chỉ chạy khi đã có product)
+    function initAddToCart(product) {
+        addBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
 
-				// quantity
-				let quantity = parseInt(qtyInput.value, 10);
-				if (isNaN(quantity) || quantity < 1) quantity = 1;
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Vui lòng đăng nhập để mua hàng!');
+                window.location.href = '/login';
+                return;
+            }
 
-				// ID product – TUỲ THEO BẠN ĐANG LƯU THẾ NÀO
-				// giả sử sau khi load detail bạn có window.currentProduct
-				const productId = window.currentProduct?._id;
-				if (!productId) {
-					alert('Không tìm thấy ID sản phẩm');
-					return;
-				}
+            let quantity = parseInt(qtyInput?.value || 1, 10);
+            if (isNaN(quantity) || quantity < 1) quantity = 1;
 
-				try {
-					const res = await fetch('http://localhost:8080/add-cart', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'Authorization': `Bearer ${token}`,
-						},
-						body: JSON.stringify({
-							ID_product: productId,   // đổi đúng key backend yêu cầu
-							quantity: quantity,
-						}),
-					});
+            const productId = product._id;
+			console.log(productId);
+            if (!productId) {
+                alert('Không tìm thấy ID sản phẩm!');
+                return;
+            }
 
-					const data = await res.json();
-					if (!res.ok) {
-						throw new Error(data.message || 'Thêm vào giỏ hàng thất bại');
-					}
+            try {
+                const res = await fetch('/add-cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        ID_product: productId,   // backend yêu cầu key này
+                        quantity: quantity,
+                    }),
+                });
 
-					// thành công => chuyển sang trang giỏ hàng
-					window.location.href = '/cart.html';
-				} catch (err) {
-					console.error(err);
-					alert(err.message || 'Có lỗi khi thêm vào giỏ hàng');
-				}
-			});
-		});
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.message || 'Thêm vào giỏ hàng thất bại');
+                }
+
+                alert('Đã thêm vào giỏ hàng thành công!');
+                window.location.href = '/cart';
+
+            } catch (err) {
+                console.error('Lỗi thêm giỏ hàng:', err);
+                alert(err.message || 'Có lỗi xảy ra, vui lòng thử lại');
+            }
+        });
+    }
+
+    
+    if (window.currentProduct) {
+        initAddToCart(window.currentProduct);
+    }
+
+   
+    window.addEventListener('productLoaded', function handler(e) {
+        initAddToCart(e.detail);
+
+        window.removeEventListener('productLoaded', handler);
+    });
+
+    setTimeout(() => {
+        if (!window.currentProduct) {
+            console.warn('Chưa nhận được dữ liệu sản phẩm sau 5s. Kiểm tra file product_detail.js có dispatchEvent("productLoaded") chưa?');
+        }
+    }, 5000);
+});
 	</script>
 
 	<script src="/js/category.js"></script>
 	<script src="/js/product_detail.js"></script>
+	  <script>
+  // Hàm kiểm tra và hiển thị thông tin user
+  async function loadUserInfo() {
+    const token = localStorage.getItem('token');
+    const loginLink = document.getElementById('loginLink');
+    const userSection = document.getElementById('userSection');
+    const userNameElement = document.getElementById('user_name');
+    
+    // Nếu không có token, hiển thị link login
+    if (!token) {
+      console.log('No token found, showing login link');
+      loginLink.style.display = 'inline-block';
+      userSection.style.display = 'none';
+      return;
+    }
+
+    try {
+      // Gọi API để lấy thông tin user
+      const response = await fetch('/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        // Token hết hạn hoặc không hợp lệ
+        if (response.status === 401) {
+          console.log('Token expired or invalid');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          loginLink.style.display = 'inline-block';
+          userSection.style.display = 'none';
+          return;
+        }
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        // Hiển thị section user và ẩn link login
+        loginLink.style.display = 'none';
+        userSection.style.display = 'flex';
+        
+        // Hiển thị tên user
+        userNameElement.textContent = `Xin chào, ${data.user.full_name}`;
+        
+        // Lưu lại user info
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        console.log('User loaded successfully:', data.user.full_name);
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+      // Nếu có lỗi, hiển thị link login
+      loginLink.style.display = 'inline-block';
+      userSection.style.display = 'none';
+    }
+  }
+
+  // Hàm đăng xuất
+  function logout() {
+    // Xóa token và user info
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect về trang login
+    window.location.href = '/login';
+  }
+
+  // Gọi hàm khi trang load xong
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadUserInfo);
+  } else {
+    loadUserInfo();
+  }
+</script>
 </body>
 
 </html>

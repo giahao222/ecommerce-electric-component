@@ -183,6 +183,82 @@ const changes_for_admin = async (req, res) => {
     });
   }
 };
+
+const get_user_profile = async (req, res) => {
+  try {
+    const userId = req.user._id; // lấy từ token
+
+    const user = await User.findById(userId).populate("id_roles");
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy user!" });
+    }
+
+    return res.status(200).json({
+      message: "Lấy thông tin thành công!",
+      data: {
+        id: user._id,
+        full_name: user.full_name,
+        email: user.email,
+        phone_number: user.phone_number || "",
+        address: user.address || "",
+        createdAt: user.createdAt,
+        role: user.id_roles ? user.id_roles.name : "User",
+        image: user.image || "",
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Lỗi server!" });
+  }
+};
+
+const update_user_profile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { full_name, phone_number, address } = req.body;
+    const file = req.file; // avatar
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy user!" });
+    }
+
+    // Nếu có upload ảnh
+    if (file) {
+      // Xoá ảnh cũ
+      if (user.image) {
+        const publicId = user.image.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      const newImageUrl = await upload_img(file.buffer);
+      user.image = newImageUrl;
+    }
+
+    // Update thông tin text
+    if (full_name) user.full_name = full_name;
+    if (phone_number) user.phone_number = phone_number;
+    if (address) user.address = address;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Cập nhật thông tin thành công!",
+      data: {
+        full_name: user.full_name,
+        phone_number: user.phone_number,
+        address: user.address,
+        image: user.image,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Không thể cập nhật hồ sơ!" });
+  }
+};
+
+
 module.exports = {
   get_all_users_information,
   lock_user_by_id,
@@ -190,4 +266,7 @@ module.exports = {
   upload_picture_user_by_id,
   get_user_by_id,
   changes_for_admin,
+  update_user_profile,
+  get_user_profile,
+  
 };

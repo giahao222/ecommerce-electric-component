@@ -4,7 +4,7 @@ const Card = require("../models/cards");
 const Product = require("../models/products");
 const Payment = require("../models/payment");
 const PayOS = require("@payos/node");
-
+const Cart = require("../models/cards");
 const payos = new PayOS(
   "31c121c9-7e94-4ee9-9794-03bfbb054b76",
   "8bb1d166-8901-42e8-9136-1df9ce7f6ea4",
@@ -184,10 +184,67 @@ const get_order_for_user = async (req, res) => {
     });
   }
 };
+function randomOrderCode() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
+
+const createOrder = async (req, res) => {
+  try {
+    const user = req.user;
+    const { name, address, phone, email_address, note, payment_method_id } = req.body;
+
+    const cart = await Cart.findOne({ id_user: user._id }).populate("products.ID_product");
+
+    if (!cart || cart.products.length === 0)
+      return res.status(400).json({ message: "Giỏ hàng trống" });
+
+    // Tính tổng tiền
+    let total = 0;
+    cart.products.forEach(p => total += p.price * p.quantity);
+
+    // Tạo Order
+    const order = await Order.create({
+      name,
+      address,
+      phone,
+      email_address,
+      note,
+      payment_method_id,
+      status: "draft",
+      total,
+      id_user: user._id,
+      orderCode: randomOrderCode(),
+    });
+
+    // Tạo OrderDetail
+    await OrderDetail.create({
+      order_id: order._id,
+      products: cart.products.map(p => ({
+        ID_product: p.ID_product._id,
+        price: p.price,
+        size_name: p.size_name,
+        color_name: p.color_name,
+        quantity: p.quantity,
+      })),
+    });
+
+
+    return res.json({
+      message: "Tạo đơn hàng thành công",
+      order_id: order._id,
+      orderCode: order.orderCode,
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Lỗi server" });
+  }
+};
 
 module.exports = {
   confilm_pay,
   receive_hook,
   get_all_history_transaction_order_all_user,
   get_order_for_user,
+  createOrder
 };

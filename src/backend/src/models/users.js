@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema(
       default: false 
     },
     
-    // ✅ THÊM CÁC FIELD MỚI CHO SOCIAL LOGIN
+    //  THÊM CÁC FIELD MỚI CHO SOCIAL LOGIN
     facebookId: {
       type: String,
       unique: true,
@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// ✅ Index để tìm kiếm nhanh hơn
+// Index để tìm kiếm nhanh hơn
 userSchema.index({ email: 1 });
 userSchema.index({ facebookId: 1 });
 userSchema.index({ googleId: 1 });

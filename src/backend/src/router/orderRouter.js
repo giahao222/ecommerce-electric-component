@@ -26,4 +26,6 @@ router.get(
   authController.authMiddleware,
   orderController.get_order_for_user
 );
+
+router.post("/create-order", authController.authMiddleware, orderController.createOrder);
 module.exports = router;

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kết quả thanh toán VNPay</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .result-card {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      max-width: 540px;
+      margin: 40px auto;
+      background: #fff;
+    }
+    .header-success { background: linear-gradient(45deg, #28a745, #20c997); }
+    .header-failed  { background: linear-gradient(45deg, #dc3545, #fd7e14); }
+    .header-warning { background: linear-gradient(45deg, #ffc107, #fd7e14); }
+    .icon-wrapper {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .btn-home {
+      border-radius: 50px;
+      padding: 12px 32px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-row {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .text-success { color: #28a745 !important; }
+    .text-danger  { color: #dc3545 !important; }
+  </style>
+</head>
+<body class="d-flex align-items-center">
+
+  <div class="container">
+    <div class="card result-card border-0">
+      <!-- Header -->
+      <div id="header" class="text-white text-center py-5">
+        <div class="icon-wrapper">
+          <i id="icon" class="bi" style="font-size: 4.5rem;"></i>
+        </div>
+        <h2 id="mainMessage" class="mb-2 fw-bold"></h2>
+        <p class="mb-0 opacity-90">
+          Mã giao dịch: <strong id="txnRef">Đang tải...</strong>
+        </p>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body p-4 p-lg-5">
+        <div id="securityAlert" class="alert alert-danger text-center d-none">
+          <i class="bi bi-shield-fill-exclamation"></i>
+          <strong>Cảnh báo bảo mật:</strong> Dữ liệu trả về từ VNPay có thể đã bị thay đổi!
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="info-row">
+              <span class="fw-600">Số tiền thanh toán</span>
+              <strong id="amountDisplay" class="text-end"></strong>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-row">
+              <span>Nội dung thanh toán</span>
+              <span id="orderInfo" class="text-end" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-row">
+              <span>Mã giao dịch VNPay</span>
+              <strong id="transactionNo">-</strong>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-row">
+              <span>Ngân hàng</span>
+              <strong id="bankCode">-</strong>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-row">
+              <span>Thời gian thanh toán</span>
+              <strong id="payDate">-</strong>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="info-row">
+              <span>Trạng thái</span>
+              <strong id="statusText"></strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid gap-3 mt-4">
+          <a href="/" class="btn btn-primary btn-home">
+            <i class="bi bi-house-door"></i> Về trang chủ
+          </a>
+          <a href="/orders" class="btn btn-outline-secondary btn-home">
+            <i class="bi bi-list-ul"></i> Xem đơn hàng của tôi
+          </a>
+        </div>
+
+        <div class="text-center mt-4 text-muted small">
+          Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi
+          <br><a href="/contact" class="text-decoration-underline">Cần hỗ trợ? Liên hệ ngay</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript xử lý dữ liệu từ URL -->
+  <script>
+    // Lấy tất cả tham số từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const success          = urlParams.get('vnp_ResponseCode') === '00';
+    const isValidSignature = urlParams.get('secureCheck') === 'true'; // bạn phải tự thêm param này từ backend nếu chữ ký hợp lệ
+    const amount           = parseInt(urlParams.get('vnp_Amount') || 0) / 100;
+    const orderInfo        = urlParams.get('vnp_OrderInfo') || 'Không có thông tin';
+    const txnRef           = urlParams.get('vnp_TxnRef') || 'N/A';
+    const transactionNo    = urlParams.get('vnp_TransactionNo') || '-';
+    const bankCode         = urlParams.get('vnp_BankCode') || '-';
+    const payDateRaw       = urlParams.get('vnp_PayDate') || '';
+    const responseCode     = urlParams.get('vnp_ResponseCode') || '';
+
+    // Format ngày
+    let payDate = '-';
+    if (payDateRaw && payDateRaw.length === 14) {
+      payDate = `${payDateRaw.substr(6,2)}/${payDateRaw.substr(4,2)}/${payDateRaw.substr(0,4)} ${payDateRaw.substr(8,2)}:${payDateRaw.substr(10,2)}:${payDateRaw.substr(12,2)}`;
+    }
+
+    // Format tiền
+    const formattedAmount = new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+
+    // Cập nhật giao diện
+    document.getElementById('txnRef').textContent = txnRef;
+    document.getElementById('amountDisplay').textContent = formattedAmount;
+    document.getElementById('amountDisplay').classList.add(success ? 'text-success' : 'text-danger');
+    document.getElementById('orderInfo').textContent = orderInfo;
+    document.getElementById('transactionNo').textContent = transactionNo;
+    document.getElementById('bankCode').textContent = bankCode;
+    document.getElementById('payDate').textContent = payDate;
+
+    if (success && isValidSignature !== false) {
+      document.getElementById('header').className = 'text-white text-center py-5 header-success';
+      document.getElementById('icon').className = 'bi bi-check-circle-fill';
+      document.getElementById('mainMessage').textContent = 'Thanh toán thành công!';
+      document.getElementById('statusText').textContent = 'Thành công';
+      document.getElementById('statusText').className = 'text-success';
+    } else if (isValidSignature === false) {
+      document.getElementById('header').className = 'text-white text-center py-5 header-warning';
+      document.getElementById('icon').className = 'bi bi-shield-fill-exclamation';
+      document.getElementById('mainMessage').textContent = 'Chữ ký không hợp lệ!';
+      document.getElementById('statusText').textContent = 'Lỗi bảo mật';
+      document.getElementById('statusText').classList.add('text-danger');
+      document.getElementById('securityAlert').classList.remove('d-none');
+    } else {
+      document.getElementById('header').className = 'text-white text-center py-5 header-failed';
+      document.getElementById('icon').className = 'bi bi-x-circle-fill';
+      document.getElementById('mainMessage').textContent = 'Thanh toán thất bại';
+      document.getElementById('statusText').textContent = 'Thất bại';
+      document.getElementById('statusText').classList.add('text-danger');
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderRelatedItem(p) {
+    
     const name = p.product_name || p.name || "Product";
     const thumb =
       p.thumbnail ||
@@ -235,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
-  
+  window.currentProduct = null;
 
   // ⭐ LOAD PRODUCT DETAIL
   async function loadProductDetail() {
@@ -244,7 +245,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("HTTP " + res.status);
 
       const product = await res.json();
+      window.currentProduct = product;
 
+      window.dispatchEvent(new CustomEvent("productLoaded", {
+        detail: product
+      }));
       // Ảnh chính
       const imageUrl =
         product.image ||
