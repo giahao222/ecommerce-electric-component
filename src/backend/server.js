@@ -83,12 +83,18 @@ app.get("/reset-password", (req, res) => {
 app.get("/create-account", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "create-account.html"));
 });
+
+app.get("/profile-single", (req, res) => {
+  res.sendFile(path.join(frontendRoot, "Template", "profile.html"));
+});
 // 🔹 ROUTE TRANG CATEGORY (dùng 1 file category.html cho mọi slug)
 app.get("/category/:slug", (req, res) => {
   res.sendFile(path.join(frontendRoot, "Template", "category.html"));
 });
 
 
+
+app.use("/auth", authRouter);
 app.use('/payment', paymentRoutes);
 
 

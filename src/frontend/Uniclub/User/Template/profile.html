@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile - VoltEdge</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navbar -->
+  <header class="w-full bg-white shadow-sm py-4 px-10 flex justify-between items-center fixed top-0 z-50">
+    <div class="flex items-center gap-2 text-xl font-bold">
+     <img src="/prepared-clam.10web.cloud/wp-content/uploads/2025/11/logo_LgIYgdxd.svg" class="attachment-full size-full wp-image-72" alt="">
+      VoltEdge
+    </div>
+    <nav class="flex gap-8 text-gray-700 font-medium hidden md:flex">
+      <a href="#" class="hover:text-black">Laptops</a>
+      <a href="#" class="hover:text-black">Desktops</a>
+      <a href="#" class="hover:text-black">Components</a>
+      <a href="#" class="hover:text-black">Collections</a>
+    </nav>
+    <div class="flex items-center gap-4">
+      <span class="flex items-center gap-2 text-gray-700"><img src="https://www.svgrepo.com/show/522670/user-circle.svg" class="w-5 h-5" />Thanh Khôi</span>
+      <button class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg text-sm">Đăng xuất</button>
+    </div>
+  </header>
+
+  <!-- Main Profile Section -->
+  <section class="pt-32 pb-20 px-6 md:px-16">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-10">
+      <!-- Left Profile Card -->
+      <div class="bg-white shadow-lg rounded-2xl p-8 text-center">
+        <img src="https://www.svgrepo.com/show/522670/user-circle.svg" class="w-32 h-32 mx-auto mb-4 opacity-80" />
+        <h2 class="text-2xl font-bold">Thanh Khôi</h2>
+        <p class="text-gray-500 text-sm mt-1">User Member</p>
+
+        <div class="mt-6 text-left space-y-3">
+          <p class="text-gray-700"><strong>Email:</strong> thanh@example.com</p>
+          <p class="text-gray-700"><strong>Số điện thoại:</strong> 0123456789</p>
+          <p class="text-gray-700"><strong>Ngày tham gia:</strong> 12/2025</p>
+        </div>
+
+        <button class="w-full bg-black text-white py-2 mt-6 rounded-xl hover:bg-gray-900 transition">
+          Chỉnh sửa hồ sơ
+        </button>
+      </div>
+
+      <!-- Right Content -->
+      <div class="md:col-span-2 space-y-8">
+        <!-- Recent Orders -->
+        <div class="bg-white shadow-lg rounded-2xl p-8">
+          <h3 class="text-xl font-bold mb-4">Đơn hàng gần đây</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+              <div>
+                <p class="font-semibold">Gaming PC RTX 4080</p>
+                <p class="text-gray-500 text-sm">Ngày mua: 22/11/2025</p>
+              </div>
+              <span class="text-green-600 font-semibold">Hoàn thành</span>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+              <div>
+                <p class="font-semibold">Mechanical Keyboard RGB</p>
+                <p class="text-gray-500 text-sm">Ngày mua: 10/11/2025</p>
+              </div>
+              <span class="text-yellow-600 font-semibold">Đang giao</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="bg-white shadow-lg rounded-2xl p-8">
+          <h3 class="text-xl font-bold mb-4">Cài đặt tài khoản</h3>
+
+          <div class="space-y-4">
+            <button class="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition font-medium">Đổi mật khẩu</button>
+            <button class="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition font-medium">Quản lý địa chỉ</button>
+            <button class="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition font-medium">Phương thức thanh toán</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

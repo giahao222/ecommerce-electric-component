@@ -82,7 +82,9 @@
         // Lưu token
         localStorage.setItem("token", data.token);
         localStorage.setItem("full_name", data.full_name);
-
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
         // Chuyển trang
         window.location.href = "./home";
       } catch (err) {

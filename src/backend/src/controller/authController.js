@@ -237,7 +237,18 @@ const loginByEmailandPassword = async (req, res) => {
   const token = jwt.sign({ user_id: userFind._id }, JWT_SECRET, {
     expiresIn: "1h",
   });
-  res.status(200).json({ token: token, full_name: userFind.full_name });
+  console.log(userFind.full_name)
+  console.log(userFind.email)
+  // res.status(200).json({ token: token, full_name: userFind.full_name });
+  res.status(200).json({
+    success: true,
+    message: "Đăng nhập thành công",
+    token: token,
+    user: {
+      full_name: userFind.full_name,
+      email: userFind.email,
+    },
+  });
 };
 
 const loginWithGoogle = passport.authenticate("google", {
@@ -416,6 +427,25 @@ const reset_password = async (req, res) => {
     res.status(500).json({ message: "Đã xảy ra lỗi khi đặt lại mật khẩu" });
   }
 };
+const getMyProfile = async (req, res) => {
+  try {
+    // req.user đã được gán từ authMiddleware
+    res.json({
+      success: true,
+      user: {
+        _id: req.user._id,
+        full_name: req.user.full_name,
+        email: req.user.email,
+        avatar: req.user.avatar || null,
+        active: req.user.active,
+        verify_email: req.user.verify_email,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi lấy profile:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
 
 module.exports = {
   createAccount,
@@ -429,4 +459,5 @@ module.exports = {
   callBackUrlFaceBook,
   send_mail_forgot_password,
   reset_password,
+  getMyProfile,
 };

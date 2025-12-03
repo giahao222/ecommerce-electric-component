@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controller/authController");
-
+const { authMiddleware } = require("../middleware/authMiddleware");
 // link đăng kí
 router.post("/create-account", authController.createAccount);
 
@@ -34,4 +34,7 @@ router.post("/reset-password", authController.reset_password);
 
 // đăng xuất
 router.get("/logout", authController.logout);
+
+router.get("/profile", authMiddleware, authController.getMyProfile);
+
 module.exports = router;

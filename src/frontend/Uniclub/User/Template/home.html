@@ -614,6 +614,7 @@
                   }
             }
       </style>
+      
 </head>
 
 <body
@@ -922,17 +923,60 @@
                               <div class="elementor-element elementor-element-u9xtx9f6 elementor-view-default elementor-widget elementor-widget-icon"
                                     data-id="u9xtx9f6" data-element_type="widget" data-widget_type="icon.default">
                                     <div class="elementor-icon-wrapper">
+                                          <a class="elementor-icon" id="loginLink" href="/login" style="display: none;">
+                                                <svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
+                                                      viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                                      <path d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
+                                                      </path>
+                                                </svg>
+                                          </a>
+            
+                                    <!-- Hiển thị khi ĐÃ đăng nhập -->
+                                    <div id="userSection" style="display: none; align-items: center; gap: 10px;">
+                                          <svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
+                                                viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" 
+                                                style="width: 20px; height: 20px; fill: white;">
+                                                <path d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
+                                                </path>
+                                          </svg>
+                                          <span id="user_name" style="color: white; font-weight: 500;"></span>
+                                          <button onclick="logout()" 
+                                                style="padding: 6px 16px; 
+                                                      background: #e74c3c; 
+                                                      color: white; 
+                                                      border: none; 
+                                                      border-radius: 4px; 
+                                                      cursor: pointer;
+                                                      font-size: 14px;
+                                                      transition: background 0.3s;"
+                                                onmouseover="this.style.background='#c0392b'"
+                                                onmouseout="this.style.background='#e74c3c'">
+                                                Đăng xuất
+                                          </button>
+                                    </div>
+                                          <!-- <span id="user_name" style="margin-left: 10px; color: white; font-weight: 500;"></span>
+                                              
                                           <a class="elementor-icon"
                                                 href="/login">
-                                                <!-- /prepared-clam.10web.cloud/my-account// -->
+                                                
                                                 <svg aria-hidden="true" class="e-font-icon-svg e-fas-user-alt"
                                                       viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                                                       <path
                                                             d="M256 288c79.5 0 144-64.5 144-144S335.5 0 256 0 112 64.5 112 144s64.5 144 144 144zm128 32h-55.1c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16H128C57.3 320 0 377.3 0 448v16c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48v-16c0-70.7-57.3-128-128-128z">
                                                       </path>
                                                 </svg> </a>
+                                            
+                                                <button onclick="logout()" style="margin-top: 10px; padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Đăng xuất</button> -->
+                                                <!-- Phần thông tin chi tiết (ẩn mặc định) -->
+                                                <!-- <div id="userInfo" style="display: none; position: absolute; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 10px; z-index: 1000;">
+                                                      <h3 style="margin: 0 0 10px 0;">Xin chào, <span id="userName"></span></h3>
+                                                      <p style="margin: 5px 0;">Email: <span id="userEmail"></span></p>
+                                                      <img id="userAvatar" src="" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; display: none; margin-top: 10px;">
+                                                      <button onclick="logout()" style="margin-top: 10px; padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Đăng xuất</button>
+                                                </div> -->
                                     </div>
                               </div>
+                              
                               <div class="elementor-element elementor-element-n8vic07y toggle-icon--custom remove-item-position--top twbb_menu-cart--empty-indicator-hide twbb_menu-cart--items-indicator-bubble twbb_menu-cart--cart-type-side-cart twbb_menu-cart--show-remove-button-yes elementor-widget elementor-widget-twbb_woocommerce-menu-cart"
                                     data-id="n8vic07y" data-element_type="widget"
                                     data-settings="{&quot;automatically_open_cart&quot;:&quot;yes&quot;,&quot;cart_type&quot;:&quot;side-cart&quot;,&quot;open_cart&quot;:&quot;click&quot;}"
@@ -972,6 +1016,7 @@
                                                             </a>
                                                       </div>
                                                 </div>
+                                                
                                           </div> <!-- close twbb_menu-cart__wrapper -->
                                     </div>
                               </div>
@@ -5197,11 +5242,11 @@
                                                                                     class="elementor-button-text">Subscribe</span>
                                                                         </span>
                                                                   </button>
-                                                                  <button type="reset"
+                                                                  <!-- <button type="reset"
                                                                         class="elementor-button elementor-hidden">
                                                                         <span>
                                                                         </span>
-                                                                  </button>
+                                                                  </button> -->
                                                             </div>
                                                       </div>
                                                 </form>
@@ -5392,6 +5437,20 @@
             events.forEach((event) => {
                   document.addEventListener(event, lazyloadRunObserver);
             });
+
+            fetch("/login-normal", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password }),
+                  })
+                  .then(res => res.json())
+                  .then(data => {
+                  if (data.full_name) {
+                        localStorage.setItem("full_name", data.full_name); // lưu lại để dùng sau
+                        document.getElementById("user_name").innerText =
+                        "Xin chào, " + data.full_name;
+                  }
+                  });
       </script>
       <script type="text/template" id="tmpl-elementor-templates-modal__header">
 	<div class="elementor-templates-modal__header__logo-area"></div>
@@ -5650,6 +5709,85 @@
             
       <script src="../js/index-2.js"></script>
       <script src="/js/category.js"></script>
+      <script>
+  // Hàm kiểm tra và hiển thị thông tin user
+  async function loadUserInfo() {
+    const token = localStorage.getItem('token');
+    const loginLink = document.getElementById('loginLink');
+    const userSection = document.getElementById('userSection');
+    const userNameElement = document.getElementById('user_name');
+    
+    // Nếu không có token, hiển thị link login
+    if (!token) {
+      console.log('No token found, showing login link');
+      loginLink.style.display = 'inline-block';
+      userSection.style.display = 'none';
+      return;
+    }
+
+    try {
+      // Gọi API để lấy thông tin user
+      const response = await fetch('/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        // Token hết hạn hoặc không hợp lệ
+        if (response.status === 401) {
+          console.log('Token expired or invalid');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          loginLink.style.display = 'inline-block';
+          userSection.style.display = 'none';
+          return;
+        }
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        // Hiển thị section user và ẩn link login
+        loginLink.style.display = 'none';
+        userSection.style.display = 'flex';
+        
+        // Hiển thị tên user
+        userNameElement.textContent = `Xin chào, ${data.user.full_name}`;
+        
+        // Lưu lại user info
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        console.log('User loaded successfully:', data.user.full_name);
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+      // Nếu có lỗi, hiển thị link login
+      loginLink.style.display = 'inline-block';
+      userSection.style.display = 'none';
+    }
+  }
+
+  // Hàm đăng xuất
+  function logout() {
+    // Xóa token và user info
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect về trang login
+    window.location.href = '/login';
+  }
+
+  // Gọi hàm khi trang load xong
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadUserInfo);
+  } else {
+    loadUserInfo();
+  }
+</script>
 </body>
 
 </html>
