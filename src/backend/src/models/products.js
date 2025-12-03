@@ -3,41 +3,72 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema(
   {
     product_name: { type: String, required: true, trim: true },
-    slug:        { type: String, required: true, unique: true, trim: true },
-    brand:       { type: String, required: true, trim: true },          // "ASUS", "Dell", "NVIDIA"
-    category:    { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    slug: { type: String, required: true, unique: true, trim: true },
 
-    price_new:   { type: Number, required: true },
-    price_old:   { type: Number },
-    stock:       { type: Number, default: 0 },
+    brand: { type: String, required: true, trim: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+    sub_category: { type: String }, // Laptop Gaming / PC Gaming / GPU / CPU
 
-    thumbnail:   { type: String },       // ảnh chính
-    images:      [{ type: String }],     // gallery
+    price_new: { type: Number, required: true },
+    price_old: { type: Number },
+    stock: { type: Number, default: 0 },
 
-    short_description: { type: String },
-    description:       { type: String },
-
-    // Thông số kỹ thuật
-    specs: {
-      cpu:          String,
-      gpu:          String,
-      ram:          String,
-      storage:      String,
-      screen:       String,              // "15.6\" FHD 144Hz"
-      refresh_rate: String,
-      battery:      String,
-      psu:          String,
-      form_factor:  String,              // "ATX", "mATX"
-      other:        String
+    status: {
+      type: String,
+      enum: ["available", "out_of_stock", "preorder", "discontinued"],
+      default: "available",
     },
 
-    isFeatured: { type: Boolean, default: false },  // dùng cho mục "Top Picks", "Featured Builds"
-    isNew:      { type: Boolean, default: false },
+    thumbnail: { type: String },
+    images: [{ type: String }],
 
-    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }]
+    short_description: { type: String },
+    long_description: { type: String }, // HTML mô tả dài
+
+    warranty: { type: String }, // "24 tháng"
+    condition: { type: String }, // new / like new / 99%
+    release_date: { type: Date },
+
+    included_items: [String],
+    promotions: [String],
+
+    specs: {
+      cpu: String,
+      gpu: String,
+      ram: String,
+      storage: String,
+
+      screen: String,         // "15.6 FHD IPS"
+      refresh_rate: String,   // 144Hz
+
+      battery: String,
+      psu: String,
+      form_factor: String,    // ATX / mATX
+
+      weight: String,
+      dimensions: String,     // 32x22x2 cm
+
+      os: String,
+      ports: String,          // HDMI, USB-C,...
+      wireless: String,       // Wifi 6, BT 5.2
+      color: String,
+
+      other: String,
+    },
+
+    rating_average: { type: Number, default: 0 },
+    rating_count: { type: Number, default: 0 },
+
+    meta_title: String,
+    meta_description: String,
+    meta_keywords: [String],
+
+    isFeatured: { type: Boolean, default: false },
+    isNew: { type: Boolean, default: false },
+
+    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   },
   { timestamps: true }
 );
-const Product = mongoose.model("Product", productSchema);
 
-module.exports = Product;
+module.exports = mongoose.model("Product", productSchema);

@@ -2,43 +2,56 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/users");
 const Role = require("../models/roles");
 require("dotenv").config();
-const { ObjectId } = require('mongodb');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 function check_cookie_token(req) {
-  const cookietoken = req.cookies.token;
-  if (!cookietoken) return false;
-  return cookietoken;
+  const token = req.cookies.token;
+  return token || false;
 }
+
 const authMiddleware = async (req, res, next) => {
   const cookietoken = check_cookie_token(req);
-  const headertoken = req.header("Authorization")?.replace("Bearer ", "") || "";
+  const headertoken = req.header("Authorization")?.replace("Bearer ", "");
 
-  let token;
-  token = headertoken;
-  if (cookietoken) {
-    token = cookietoken;
-  } else if (headertoken) {
-    token = headertoken;
-  } else {
-    return res.status(401).json({ message: "Không thể xác thực" }); // Hoặc trả về lỗi 401
+  const token = cookietoken || headertoken;
+
+  if (!token) {
+    return res.status(401).json({ message: "Không thể xác thực", code: "NO_TOKEN" });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET); // Verify with the same secret
-    console.log("Decoded token:", decoded);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    const user = await User.findOne({ _id: decoded.user_id || decoded.id});
+    const user = await User.findOne({ _id: decoded.user_id || decoded.id });
     if (!user) {
-      console.log("User not found. Redirecting to login.");
       return res.redirect("/login");
     }
 
     req.user = user;
     next();
+
   } catch (error) {
-    console.error("Error in authentication:", error);
-    return res.redirect("/login"); // Hoặc trả về lỗi 401
+    console.error("JWT Error:", error);
+
+    // 🔥 Nếu token hết hạn
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Token hết hạn",
+        code: "TOKEN_EXPIRED",
+        expiredAt: error.expiredAt,
+      });
+    }
+
+    // 🔥 Token không hợp lệ
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        message: "Token không hợp lệ",
+        code: "TOKEN_INVALID",
+      });
+    }
+
+    // 🔥 Lỗi khác → vẫn redirect
+    return res.redirect("/login");
   }
 };
 
@@ -53,9 +66,7 @@ const checkRoleUser = async (req, res, next) => {
     if (role && role.name === "Admin") {
       next();
     } else {
-      res
-        .status(400)
-        .json({ message: "Bạn không có quyền truy cập vào link này!" });
+      res.status(400).json({ message: "Bạn không có quyền truy cập vào link này!" });
     }
   } catch (error) {
     console.error("Error fetching role:", error);

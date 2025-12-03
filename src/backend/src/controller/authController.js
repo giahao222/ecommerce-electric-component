@@ -330,21 +330,34 @@ const send_mail_forgot_password = async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenHash = bcrypt.hashSync(resetToken, 10);
 
-    // Thời gian hết hạn là 1 phút
-    const expiresAt = new Date(Date.now() + 3600000);
-
+    // Thời gian hết hạn là 10 phút
+    const expiresAt = new Date(Date.now() + 900000);
+    console.log(expiresAt.getTime())
+    await PasswordResetToken.deleteMany({ email: user.email });
     await PasswordResetToken.create({
       email: user.email,
       token: resetTokenHash,
       expiresAt: expiresAt,
     });
 
-    const resetLink = `${process.env.FRONTEND_URL}?token=${resetToken}&email=${email}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
     await mailer.sendMail(
       user.email,
-      "Yêu cầu đặt lại mật khẩu của bạn",
-      `<p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào liên kết dưới đây để đặt lại mật khẩu của bạn:</p>
-       <a href="${resetLink}">Đặt lại mật khẩu</a>`
+        "Yêu cầu đặt lại mật khẩu của bạn",
+          `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào liên kết dưới đây để đặt lại mật khẩu của bạn:</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" 
+                 style="background:#4CAF50; color:white; padding:12px 30px; text-decoration:none; border-radius:5px; font-weight:bold;">
+                Đặt lại mật khẩu
+              </a>
+            </p>
+            
+            <hr>
+            <small>Trân trọng,<br><strong>Loi Team</strong></small>
+          </div>
+          `
     );
 
     res.json({ message: "Đã gửi email để khôi phục mật khẩu" });
@@ -357,10 +370,16 @@ const send_mail_forgot_password = async (req, res) => {
 const reset_password = async (req, res) => {
   const { email, token, newPassword } = req.body;
 
+  
+
   try {
     // Tìm token trong cơ sở dữ liệu dựa trên email
     const tokenEntry = await PasswordResetToken.findOne({ email });
-
+    
+    console.log("expiresAt:", tokenEntry.expiresAt);
+    console.log("expiresAt_ms:", tokenEntry.expiresAt.getTime());
+    console.log("now:", new Date());
+    console.log("now_ms:", Date.now());
     // Kiểm tra nếu token không tồn tại
     if (!tokenEntry) {
       return res.status(400).json({ message: "Token không hợp lệ" });

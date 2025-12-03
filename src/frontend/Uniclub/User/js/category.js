@@ -1,20 +1,34 @@
 // public/js/category.js
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Lấy slug từ URL: /category/laptops -> "laptops"
+  // Lấy slug từ URL: /category/laptops → "laptops"
   const pathParts = window.location.pathname.split("/").filter(Boolean);
   const slug = pathParts[pathParts.length - 1] || "all";
 
-  // UL để render sản phẩm
   const productsRoot = document.querySelector("#category-products");
+  const paginationRoot = document.querySelector("#category-pagination");
+
+  // ô search
+  const searchInput = document.getElementById("category-search-input");
+  const searchBtn = document.getElementById("category-search-btn");
+  let searchDebounce = null;
 
   if (!productsRoot) {
-    console.error(
-      "❌ Không tìm thấy phần tử #category-products trong category.html"
-    );
+    console.error("❌ Không tìm thấy #category-products trong category.html");
     return;
   }
 
+  /* =====================================================
+   * BIẾN PHÂN TRANG + LỌC
+   * ===================================================== */
+  let allProducts = [];
+  let filteredProducts = [];
+  let currentPage = 1;
+  const perPage = 6; // 👉 6 sản phẩm / trang
+
+  /* =====================================================
+   * FORMAT PRICE
+   * ===================================================== */
   function formatPrice(value) {
     if (value == null) return "";
     return (
@@ -26,163 +40,204 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  /* =============  FILTER THEO PRICE (FE) ============= */
+  /* =====================================================
+   * RENDER DANH SÁCH SẢN PHẨM THEO TRANG
+   * ===================================================== */
+  function renderProducts(list = filteredProducts) {
+    const total = list.length;
 
-  function applyPriceFilter() {
-    if (!allProducts.length) return;
+    if (!total) {
+      productsRoot.innerHTML = "<li>Không có sản phẩm phù hợp.</li>";
+      return;
+    }
 
-    const minInput = document.querySelector(".twwf_min_price_input");
-    const maxInput = document.querySelector(".twwf_max_price_input");
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    const show = list.slice(start, end);
 
-    let min = minInput ? parseFloat(minInput.value) : NaN;
-    let max = maxInput ? parseFloat(maxInput.value) : NaN;
+    const html = show
+      .map((p) => {
+        const name = p.product_name || p.name || "Sản phẩm";
+        const thumb =
+          p.thumbnail ||
+          p.image ||
+          "https://via.placeholder.com/600x600?text=No+Image";
 
-    if (isNaN(min)) min = 0;
-    if (isNaN(max)) max = Infinity;
+        const priceNew = p.price_new || 0;
+        const priceOld = p.price_old || null;
 
-    const filtered = allProducts.filter((p) => {
-      const price = Number(p.price_new || 0);
-      return price >= min && price <= max;
-    });
+        const priceNewText = formatPrice(priceNew);
+        const priceOldText = priceOld ? formatPrice(priceOld) : null;
 
-    renderProducts(filtered);
+        const hasSale = priceOld && priceOld > priceNew;
+
+        const detailUrl = `/product/${encodeURIComponent(p.slug || p._id)}`;
+
+        return `
+        <li class="product type-product">
+          <a href="${detailUrl}" class="woocommerce-LoopProduct-link">
+            <div class="twbb-image-wrap">
+              <div class="twbb-image-container" style="aspect-ratio: 1/1;">
+                ${hasSale ? '<span class="onsale">Sale</span>' : ""}
+                <img src="${thumb}" loading="lazy" alt="${name}" />
+              </div>
+            </div>
+            <h2 class="woocommerce-loop-product__title">${name}</h2>
+            <span class="price">
+              ${
+                priceOldText
+                  ? `<del><span><bdi>${priceOldText}</bdi></span></del>`
+                  : ""
+              }
+              <ins><span><bdi>${priceNewText}</bdi></span></ins>
+            </span>
+          </a>
+        </li>`;
+      })
+      .join("");
+
+    productsRoot.innerHTML = html;
   }
 
-  function initFilters() {
-    // Nếu bạn vẫn giữ nút Apply thì đoạn này vẫn dùng được
-    const btn = document.getElementById("price-filter-apply");
-    if (btn) {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        applyPriceFilter();
+  /* =====================================================
+   * RENDER PAGINATION
+   * ===================================================== */
+  function renderPagination() {
+    if (!paginationRoot) return;
+
+    const totalItems = filteredProducts.length;
+    const totalPages = Math.ceil(totalItems / perPage);
+
+    if (totalPages <= 1) {
+      paginationRoot.innerHTML = "";
+      return;
+    }
+
+    let html = `<button class="page-btn" data-page="${
+      currentPage - 1
+    }" ${currentPage === 1 ? "disabled" : ""}>Prev</button>`;
+
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${
+        currentPage === i ? "active" : ""
+      }" data-page="${i}">${i}</button>`;
+    }
+
+    html += `<button class="page-btn" data-page="${
+      currentPage + 1
+    }" ${currentPage === totalPages ? "disabled" : ""}>Next</button>`;
+
+    paginationRoot.innerHTML = html;
+
+    paginationRoot.querySelectorAll(".page-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const page = Number(btn.dataset.page);
+        if (isNaN(page)) return;
+
+        const totalPages = Math.ceil(filteredProducts.length / perPage);
+
+        if (page >= 1 && page <= totalPages) {
+          currentPage = page;
+          renderProducts();
+          renderPagination();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+    });
+  }
+
+  /* =====================================================
+   * SEARCH THEO KEYWORD (trên FE)
+   * ===================================================== */
+  function applySearch() {
+    if (!searchInput) return;
+
+    const keyword = searchInput.value.trim().toLowerCase();
+
+    if (!keyword) {
+      // không có keyword -> trả về toàn bộ
+      filteredProducts = allProducts.slice();
+    } else {
+      filteredProducts = allProducts.filter((p) => {
+        const name = (p.product_name || p.name || "").toLowerCase();
+        const brand = (p.brand || "").toLowerCase();
+        const sub = (p.sub_category || "").toLowerCase();
+
+        return (
+          name.includes(keyword) ||
+          brand.includes(keyword) ||
+          sub.includes(keyword)
+        );
       });
     }
 
-    // --- TỰ ĐỘNG LỌC KHI KÉO SLIDER ---
-
-    const minInput = document.querySelector(".twwf_min_price_input");
-    const maxInput = document.querySelector(".twwf_max_price_input");
-
-    let lastMin = minInput ? minInput.value : null;
-    let lastMax = maxInput ? maxInput.value : null;
-
-    // Mỗi 300ms kiểm tra xem giá min/max có đổi không,
-    // nếu đổi thì apply filter → hiệu ứng giống WooCommerce gốc
-    setInterval(() => {
-      if (!minInput || !maxInput) return;
-
-      const curMin = minInput.value;
-      const curMax = maxInput.value;
-
-      if (curMin !== lastMin || curMax !== lastMax) {
-        lastMin = curMin;
-        lastMax = curMax;
-        applyPriceFilter();
-      }
-    }, 300);
+    currentPage = 1;
+    renderProducts();
+    renderPagination();
   }
 
-  // Init
-  document.addEventListener("DOMContentLoaded", () => {
-    loadCategoryProducts();
-    initFilters();
-  });
-
+  /* =====================================================
+   * FETCH API CATEGORIES
+   * ===================================================== */
   async function loadCategoryProducts() {
     const apiUrl = `/api/products/category/${slug}`;
-    console.log("🔍 Gọi API category:", apiUrl);
-
     productsRoot.innerHTML = "<li>Đang tải sản phẩm...</li>";
 
     try {
       const res = await fetch(apiUrl);
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} - ${res.statusText}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const products = await res.json();
-      console.log("✅ Products from API:", products);
 
       if (!Array.isArray(products) || products.length === 0) {
         productsRoot.innerHTML =
           "<li>Không có sản phẩm nào trong danh mục này.</li>";
+        if (paginationRoot) paginationRoot.innerHTML = "";
         return;
       }
 
-      const itemsHtml = products
-        .map((p) => {
-          const name = p.product_name || p.name || "Sản phẩm";
-          const thumb =
-            p.thumbnail ||
-            p.image ||
-            "https://via.placeholder.com/600x600?text=No+Image";
+      allProducts = products;
+      filteredProducts = allProducts.slice();
+      currentPage = 1;
 
-          const priceNew = p.price_new ?? p.price;
-          const priceOld = p.price_old ?? null;
-
-          const priceNewText = formatPrice(priceNew);
-          const priceOldText = priceOld ? formatPrice(priceOld) : null;
-          const hasSale = priceOld && priceOld > priceNew;
-
-          const detailUrl = `/product/${encodeURIComponent(p.slug || p._id)}`; // sau này bạn thay link chi tiết vào đây
-
-          return `
-            <li class="product type-product">
-              <a href="${detailUrl}" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
-                <div class="twbb-image-wrap">
-                  <div class="twbb-image-container" style="aspect-ratio: 1/1;">
-                    ${hasSale ? '<span class="onsale">Sale</span>' : ""}
-                    <img
-                      width="600"
-                      height="600"
-                      src="${thumb}"
-                      class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-                      alt="${name}"
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
-                <h2 class="woocommerce-loop-product__title">
-                  ${name}
-                </h2>
-                <span class="price">
-                  ${
-                    priceOldText
-                      ? `<del aria-hidden="true">
-                           <span class="woocommerce-Price-amount amount">
-                             <bdi>${priceOldText}</bdi>
-                           </span>
-                         </del>`
-                      : ""
-                  }
-                  <ins aria-hidden="true">
-                    <span class="woocommerce-Price-amount amount">
-                      <bdi>${priceNewText}</bdi>
-                    </span>
-                  </ins>
-                </span>
-              </a>
-              <div class="twbb-add-to-cart-container">
-                <a href="#"
-                   class="button product_type_simple add_to_cart_button ajax_add_to_cart"
-                   role="button">
-                  Add to cart
-                </a>
-              </div>
-            </li>
-          `;
-        })
-        .join("");
-
-      // KHÔNG bọc thêm <ul> nữa, chỉ gán <li> vào UL sẵn
-      productsRoot.innerHTML = itemsHtml;
+      renderProducts();
+      renderPagination();
     } catch (err) {
       console.error("🔥 Lỗi load category:", err);
-      productsRoot.innerHTML =
-        "<li>Lỗi tải sản phẩm. Vui lòng thử lại sau.</li>";
+      productsRoot.innerHTML = "<li>Lỗi tải sản phẩm.</li>";
+      if (paginationRoot) paginationRoot.innerHTML = "";
     }
   }
 
+  /* =====================================================
+   * GẮN EVENT SEARCH
+   * ===================================================== */
+  if (searchBtn) {
+    searchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      applySearch(); // vẫn giữ nút Search cho tiện
+    });
+  }
+  
+  if (searchInput) {
+    // Gõ tới đâu search tới đó (debounce 300ms)
+    searchInput.addEventListener("keyup", () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        applySearch();
+      }, 300);
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(searchDebounce);
+        applySearch();
+      }
+    });
+  }
+
+  /* =====================================================
+   * INIT
+   * ===================================================== */
   loadCategoryProducts();
 });

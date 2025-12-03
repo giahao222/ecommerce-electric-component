@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailUrl = `/product/${p.slug || p._id}`;
 
     return `
-      <li class="product type-product">
+      <li class="swiper-slide product type-product">
         <a href="${detailUrl}"
            class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
           <div class="twbb-image-wrap">
@@ -92,54 +92,152 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+
   async function loadRelatedProducts(product) {
     if (!relatedRoot) return;
-  
+
     try {
       // Tính slug cho category một cách an toàn
       let categorySlug = "laptops";
-  
+
       if (product.categorySlug) {
-        // Trường backend trả sẵn
         categorySlug = product.categorySlug;
       } else if (product.category && typeof product.category === "object") {
-        // populate("category") -> object
         if (product.category.slug) {
           categorySlug = product.category.slug;
         } else if (product.category.name) {
           categorySlug = product.category.name.toLowerCase();
         }
       } else if (typeof product.category === "string") {
-        // trường hợp chỉ lưu chuỗi
         categorySlug = product.category.toLowerCase();
       }
-  
-      // (tuỳ chọn) debug thêm
+
       console.log("👉 categorySlug dùng để gọi API:", categorySlug);
-  
+
       const res = await fetch(
         `/api/products/category/${encodeURIComponent(
           categorySlug
-        )}?limit=4&exclude=${product._id}`
+        )}?limit=10&exclude=${product._id}`
       );
       if (!res.ok) throw new Error("HTTP " + res.status);
-  
+
       let list = await res.json();
-      list = list.filter((x) => x._id !== product._id).slice(0, 4);
-  
+      list = list.filter((x) => x._id !== product._id).slice(0, 10);
+
       if (!list.length) {
-        relatedRoot.innerHTML = "<li>Không có sản phẩm liên quan.</li>";
+        relatedRoot.innerHTML =
+          "<li class='swiper-slide'>Không có sản phẩm liên quan.</li>";
         return;
       }
-  
+
+      // Đổ các slide vào swiper-wrapper
       relatedRoot.innerHTML = list.map(renderRelatedItem).join("");
+
+      // Cập nhật swiper (dùng chung cơ chế với slider ở Home)
+      try {
+        if (window.swiper && typeof window.swiper.update === "function") {
+          window.swiper.update();
+        }
+      } catch (e) {
+        console.warn("Không update được swiper cho related products:", e);
+      }
     } catch (err) {
       console.error("Lỗi load related products:", err);
-      relatedRoot.innerHTML = "<li>Lỗi tải sản phẩm liên quan.</li>";
+      relatedRoot.innerHTML =
+        "<li class='swiper-slide'>Lỗi tải sản phẩm liên quan.</li>";
     }
+  }
+
+
+  // ⭐ RENDER RATING TRUNG BÌNH
+  function renderAverageRating(avg) {
+    const starBox = document.getElementById("rating-stars");
+    const ratingText = document.getElementById("rating-text");
+
+    if (!starBox || !ratingText) return;
+
+    starBox.innerHTML = "";
+    const rounded = Math.round(avg);
+
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement("span");
+      star.textContent = "★";
+      if (i <= rounded) star.classList.add("active");
+      starBox.appendChild(star);
+    }
+
+    ratingText.textContent = `${avg.toFixed(1)} / 5.0`;
+  }
+
+  // ⭐ SAO TƯƠNG TÁC + GỬI API
+  function setupRating(product) {
+    const starBox = document.getElementById("rating-stars");
+    const ratingText = document.getElementById("rating-text");
+    if (!starBox || !ratingText) return;
+  
+    let currentAvg = product.rating_average || 0;
+  
+    // Tạo 5 sao duy nhất
+    const stars = [];
+    starBox.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement("span");
+      star.textContent = "★";
+      star.dataset.index = i;
+      starBox.appendChild(star);
+      stars.push(star);
+    }
+  
+    // Hàm highlight sao
+    function highlightStars(number) {
+      stars.forEach((s, idx) => {
+        s.classList.toggle("active", idx < number);
+      });
+    }
+  
+    // Lần đầu hiển thị rating trung bình
+    highlightStars(Math.round(currentAvg));
+    ratingText.textContent = `${currentAvg.toFixed(1)} / 5.0`;
+  
+    // Hover preview
+    stars.forEach((star, index) => {
+      star.addEventListener("mouseover", () => {
+        highlightStars(index + 1);
+      });
+  
+      star.addEventListener("mouseleave", () => {
+        highlightStars(Math.round(currentAvg));
+      });
+  
+      // Click rating
+      star.addEventListener("click", async () => {
+        const selected = index + 1;
+        highlightStars(selected);
+        ratingText.textContent = `${selected} / 5.0`;
+  
+        try {
+          const res = await fetch(`/products/${product._id}/rating`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rating: selected }),
+          });
+  
+          const data = await res.json();
+  
+          if (data.rating_average) {
+            currentAvg = data.rating_average;
+            highlightStars(Math.round(currentAvg));
+            ratingText.textContent = `${currentAvg.toFixed(1)} / 5.0`;
+          }
+        } catch (err) {
+          console.error("Lỗi gửi rating:", err);
+        }
+      });
+    });
   }
   
 
+  // ⭐ LOAD PRODUCT DETAIL
   async function loadProductDetail() {
     try {
       const res = await fetch(`/api/products/slug/${slug}`);
@@ -172,6 +270,43 @@ document.addEventListener("DOMContentLoaded", () => {
           ${name}
         `;
       }
+
+      // Extra info
+      const extraRoot = document.getElementById("extra-info-list");
+      if (extraRoot) {
+        extraRoot.innerHTML = `
+          <li><strong>Thương hiệu:</strong> ${product.brand || "Không rõ"}</li>
+          <li><strong>Danh mục:</strong> ${product.categoryName || "Không rõ"}</li>
+          <li><strong>Loại sản phẩm:</strong> ${
+            product.sub_category || "Không rõ"
+          }</li>
+          ${
+            product.warranty
+              ? `<li><strong>Bảo hành:</strong> ${product.warranty}</li>`
+              : ""
+          }
+          ${
+            product.promotions?.length
+              ? `<li><strong>Khuyến mãi:</strong> ${product.promotions.join(
+                  ", "
+                )}</li>`
+              : ""
+          }
+        `;
+      }
+
+      // Specs block
+      const specsRoot = document.getElementById("specs-list");
+      if (specsRoot && product.specs) {
+        specsRoot.innerHTML = Object.entries(product.specs)
+          .map(([key, val]) => {
+            return `<li><strong>${key.toUpperCase()}:</strong> ${val}</li>`;
+          })
+          .join("");
+      }
+
+      // ⭐ SETUP RATING UI + API
+      setupRating(product);
 
       // Giá
       const priceNew = product.price_new ?? product.price;
@@ -206,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : "<p>No description available.</p>";
       }
 
-      // Load related
+      // Related
       await loadRelatedProducts(product);
     } catch (err) {
       console.error("Lỗi load product detail:", err);
